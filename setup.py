@@ -14,7 +14,7 @@ setup(name='tc_scraper',
       'Programming Language :: Python :: 3', 
       'Operating System :: OS Independent' ],
       
-      url='https://github.com/y0g38h-kum4r/Topcoder_scraper',
+      url='https://github.com/y0g38h-kum4r/tc_scraper',
       author='y0g38h-kum4r',
       author_email='yogeshkumar.m200010@gmail.com',
       keywords = 'Software',
