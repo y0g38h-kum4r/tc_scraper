@@ -19,7 +19,11 @@ setup(name='tc_scraper',
       author_email='yogeshkumar.m200010@gmail.com',
       keywords = 'Software',
       packages = ['tc_scraper'],
-      install_requires = ['beautifulsoup4 >= 4.9.3'],
+      install_requires = [
+                              'beautifulsoup4 >= 4.9.3',
+                              'lxml >= 4.6.3', 
+                              'requests >= 2.25.1'
+                         ],
       entry_points={
             "console_scripts": [
                   "tc_scraper = tc_scraper.__main__:main"
