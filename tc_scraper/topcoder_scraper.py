@@ -44,85 +44,91 @@ def analysis(contest_name, l, div):
 		soup = soup2
 		
 	print(f'{ contest_name } ANALYSIS')
+	print()
+
+	ProblemSet = soup.find_all('p')[1]
+	Problems = ProblemSet.find_all('a')
+	divproblemcnt = 0
+	for Problem in Problems:
+		print(f'{Problem.text:40}', end = ' ')
+		if l:
+			print(Problem['href'])
+		else:
+			print()
+		divproblemcnt += 1
+
+	print()
+	print('COMPUTING PROBLEM RATINGS!! WAIT A MINUTE')
+	print()
+	table = soup.find_all('tr')
+	Solvedby = [0] * divproblemcnt
+	
+	
+	if divproblemcnt == 0:
+		div_status = 0
+
+	AveRating = 0 
+	cnt_OldCoders = 0
+	Rating = []
+	volatility = []
+	PerfAs = []
+	SolvedStatus = []
+	
 	if div_status:
-		ProblemSet = soup.find_all('p')[1]
-		Problems = ProblemSet.find_all('a')
-		divproblemcnt = 0
-		for Problem in Problems:
-			print(f'{Problem.text:40}', end = ' ')
-			if l:
-				print(Problem['href'])
-			else:
-				print()
-			divproblemcnt += 1
-		print()
-		print('COMPUTING PROBLEM RATINGS!! WAIT A MINUTE')
-		print()
-		table = soup.find_all('tr')
-		Solvedby = [0] * divproblemcnt
-		
-		
-		if divproblemcnt == 0:
-			div_status = 0
-
-		AveRating = 0 
-		cnt_OldCoders = 0
-		Rating = []
-		volatility = []
-		PerfAs = []
-		SolvedStatus = []
-		
-		if div_status:
-			for row in table:
-				data = row.find_all('td')
+		for row in table:
+			data = row.find_all('td')
+			
+			if len(data):
+				afterrating = data[-2].text
 				
-				if len(data):
-					afterrating = data[-2].text
-					
-					if len(afterrating) != 0:
-						st = []
-						for i in range(divproblemcnt):
-							score = data[3 + i].text
-							if len(score) == 0:
-								st.append(0)
-								score = 0
-							else:
-								score = float(score)
-								if score > 0:
-									st.append(1)
-								else:
-									st.append(0)
-						
-						coder_link = base + '/topcoder/srm/history/' + data[1].text
-						codersource = requests.get(coder_link).text
-						codersoup = BeautifulSoup(codersource, 'lxml')
-						history = codersoup.find_all('tr')
-						
-						isOldParticipant = -1
-						for contest in history:
-							contest_data = contest.find_all('td')
-							
-							if len(contest_data):
-								if isOldParticipant == 0:
-									isOldParticipant += 1
-									volatility.append(int(contest_data[-4].text))
-									break
-								else:
-									isOldParticipant += 1
-						
-						if isOldParticipant == 0:
-							PerfAs.append(int(data[-2].text))
-							Rating.append(-1)
-							volatility.append(0)
+				if len(afterrating) != 0:
+					st = []
+					for i in range(divproblemcnt):
+						score = data[3 + i].text
+						if len(score) == 0:
+							st.append(0)
+							score = 0
 						else:
-							PerfAs.append(-1) #tobecalculated
-							Rating.append(int(data[-3].text))
-							cnt_OldCoders += 1
-							AveRating += int(data[-3].text)
+							score = float(score)
+							if score > 0:
+								st.append(1)
+							else:
+								st.append(0)
+					
+					coder_link = base + '/topcoder/srm/history/' + data[1].text
+					codersource = requests.get(coder_link).text
+					codersoup = BeautifulSoup(codersource, 'lxml')
+					history = codersoup.find_all('tr')
+					
+					isOldParticipant = -1
+					for contest in history:
+						contest_data = contest.find_all('td')
+						
+						if len(contest_data):
+							if isOldParticipant == 0:
+								isOldParticipant += 1
+								volatility.append(int(contest_data[-4].text))
+								break
+							else:
+								isOldParticipant += 1
+					
+					if isOldParticipant == 0:
+						PerfAs.append(int(data[-2].text))
+						Rating.append(-1)
+						volatility.append(0)
+					else:
+						PerfAs.append(-1) #tobecalculated
+						Rating.append(int(data[-3].text))
+						cnt_OldCoders += 1
+						AveRating += int(data[-3].text)
 
-						SolvedStatus.append(st)
+					SolvedStatus.append(st)
 						
 		n = len(Rating)
+
+		if (n == 0):
+			div_status = 0
+
 		Outoff = [n] * divproblemcnt				
 		
 		if cnt_OldCoders >= 1:				
@@ -195,15 +201,17 @@ def analysis(contest_name, l, div):
 			else:
 				ProblemRatings[i] = math.ceil(ProblemRatings[i] / Solvedby[i])
 
-
-		print('Solvedby(Rated Partcipants):' + " "*12, end = ' ')
-		print(Solvedby)
-				
-		print('TriedBy(Rated Partcipants):' +  " "*13, end = ' ')
-		print(Outoff)
-				
-		print('Expected Problem Ratings:' + " "*15, end = ' ')
-		print(ProblemRatings)
+		if div_status:
+			print('Solvedby(Rated Partcipants):' + " "*12, end = ' ')
+			print(Solvedby)
+					
+			print('TriedBy(Rated Partcipants):' +  " "*13, end = ' ')
+			print(Outoff)
+					
+			print('Expected Problem Ratings:' + " "*15, end = ' ')
+			print(ProblemRatings)
+		else:
+			print('The contest in unrated or invalid! No stats available !!')
 	else:
 		print('The contest in unrated or invalid! No stats available !!')
 
