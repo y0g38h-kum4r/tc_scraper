@@ -38,3 +38,5 @@ optional arguments:
   -o, --output        Output result to txt file
   -l, --problemlinks  Prints the links to problems
 ```
+
+https://pypi.org/project/tc-scraper/
