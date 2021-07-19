@@ -1,10 +1,13 @@
 #Note the contest names are case-senstive
 from bs4 import BeautifulSoup
+from statistics import NormalDist
 import requests
+import argparse
 import math
 import sys
 
-def analysis(contest_name, st):
+
+def analysis(contest_name, l, div):
 	base = 'https://competitiveprogramming.info'
 	source = requests.get(base + '/topcoder/srm/').text
 	soup = BeautifulSoup(source, 'lxml')
@@ -27,112 +30,183 @@ def analysis(contest_name, st):
 			
 			sourcediv2 = requests.get(div2_link).text
 			soup2 = BeautifulSoup(sourcediv2, 'lxml');
-			
-			print(contest[2].text,end=' ') 
-			print('Div1')
+			break
+	if (div == 1):
+		div_status = div1_status 
+		div_link = div1_link
+		sourcediv = sourcediv1
+		soup = soup1
 
-			ProblemSet = soup1.find_all('p')[1]
-			Problems = ProblemSet.find_all('a')
-			div1problemcnt = 0
-			for Problem in Problems:
-				print(f'{Problem.text:40}', end = ' ')
-				if st:
-					print(Problem['href'])
-				else:
-					print()
-				div1problemcnt += 1
-			print()
-
-			data1 = soup1.find_all('tr')
-			Solvedby = [0] * div1problemcnt
-			Rating = [0] * div1problemcnt
-			Outoff = [0] * div1problemcnt
-			
-			if div1problemcnt == 0:
-				div1_status = 0
-			if div1_status:
-				for row in data1:
-					data = row.find_all('td')
-					if len(data):
-						for i in range(div1problemcnt):
-							temp = (data[3 + i].text)
-							afterrating = (data[-2].text)
-							if len(temp) == 0:
-								temp = 0.0
-							else:
-								temp = float(temp)
-							if (len(afterrating) != 0):
-								Outoff[i] += 1
-								if temp > 0:
-									Solvedby[i] += 1
-									Rating[i] += int(data[-2].text)
-				if len(Outoff) and Outoff[0] != 0:
-					print('Solvedby(Rated Partcipants):' + " "*12, end = ' ')
-					print(Solvedby)
-					print('TriedBy(Rated Partcipants):' +  " "*13, end = ' ')
-					print(Outoff)
-					print('Expected Problem Ratings:' + " "*15, end = ' ')
-					for i in range(div1problemcnt):
-						if Solvedby[i]:
-							Rating[i] = math.ceil(Rating[i] / Solvedby[i])
-						else:
-							Rating[i] = 'INF'
-					print(Rating)
-					print()
-			else:
-				print('The contest in unrated or invalid! No stats available!!')
-			
-			for i in range(125):
-				print('-',end='')
-			print()
-			print(contest[2].text,end=' ') 
-			print('Div2')
-			ProblemSet = soup2.find_all('p')[1]
-			Problems = ProblemSet.find_all('a')
-			div2problemcnt = 0
-			for Problem in Problems:
-				print(f'{Problem.text:40}', end = ' ')
+	else:
+		div_status = div2_status 
+		div_link = div2_link
+		sourcediv = sourcediv2
+		soup = soup2
+		
+	print(f'{ contest_name } ANALYSIS')
+	if div_status:
+		ProblemSet = soup.find_all('p')[1]
+		Problems = ProblemSet.find_all('a')
+		divproblemcnt = 0
+		for Problem in Problems:
+			print(f'{Problem.text:40}', end = ' ')
+			if l:
 				print(Problem['href'])
-				div2problemcnt += 1
-			print()
-			data2 = soup2.find_all('tr')
-			Solvedby = [0] * div2problemcnt
-			Rating = [0] * div2problemcnt
-			Outoff = [0] * div2problemcnt
-
-			if div2problemcnt == 0:
-				div2_status = 0
-			if div2_status:
-				for row in data2:
-					data = row.find_all('td')
-					if len(data):
-						for i in range(div1problemcnt):
-							temp = (data[3 + i].text)
-							afterrating = (data[-2].text)
-							if len(temp) == 0:
-								temp = 0.0
-							else:
-								temp = float(temp)
-							if (len(afterrating) != 0):
-								Outoff[i] += 1
-								if temp > 0:
-									Solvedby[i] += 1
-									Rating[i] += int(data[-2].text)
-				if len(Outoff) and Outoff[0] != 0:
-					print('Solvedby(Rated Partcipants):' + " "*12, end = ' ')
-					print(Solvedby)
-					print('TriedBy(Rated Partcipants):' +  " "*13, end = ' ')
-					print(Outoff)
-					print('Expected Problem Ratings:' + " "*15, end = ' ')
-					for i in range(div2problemcnt):
-						if Solvedby[i]:
-							Rating[i] = math.ceil(Rating[i] / Solvedby[i])
-						else:
-							Rating[i] ='INF'
-					print(Rating)
-					print()
 			else:
-				print('The contest in unrated or invalid! No stats available !!')
+				print()
+			divproblemcnt += 1
+		print()
+		print('COMPUTING PROBLEM RATINGS!! WAIT A MINUTE')
+		print()
+		table = soup.find_all('tr')
+		Solvedby = [0] * divproblemcnt
+		
+		
+		if divproblemcnt == 0:
+			div_status = 0
+
+		AveRating = 0 
+		cnt_OldCoders = 0
+		Rating = []
+		volatility = []
+		PerfAs = []
+		SolvedStatus = []
+		
+		if div_status:
+			for row in table:
+				data = row.find_all('td')
+				
+				if len(data):
+					afterrating = data[-2].text
+					
+					if len(afterrating) != 0:
+						st = []
+						for i in range(divproblemcnt):
+							score = data[3 + i].text
+							if len(score) == 0:
+								st.append(0)
+								score = 0
+							else:
+								score = float(score)
+								if score > 0:
+									st.append(1)
+								else:
+									st.append(0)
+						
+						coder_link = base + '/topcoder/srm/history/' + data[1].text
+						codersource = requests.get(coder_link).text
+						codersoup = BeautifulSoup(codersource, 'lxml')
+						history = codersoup.find_all('tr')
+						
+						isOldParticipant = -1
+						for contest in history:
+							contest_data = contest.find_all('td')
+							
+							if len(contest_data):
+								if isOldParticipant == 0:
+									isOldParticipant += 1
+									volatility.append(int(contest_data[-4].text))
+									break
+								else:
+									isOldParticipant += 1
+						
+						if isOldParticipant == 0:
+							PerfAs.append(int(data[-2].text))
+							Rating.append(-1)
+							volatility.append(0)
+						else:
+							PerfAs.append(-1) #tobecalculated
+							Rating.append(int(data[-3].text))
+							cnt_OldCoders += 1
+							AveRating += int(data[-3].text)
+
+						SolvedStatus.append(st)
+						
+		n = len(Rating)
+		Outoff = [n] * divproblemcnt				
+		
+		if cnt_OldCoders >= 1:				
+			AveRating /= cnt_OldCoders
+			num1 = 0
+			num2 = 0
+			for i in range(n):
+				if (Rating[i] != -1):
+					num1 += volatility[i] ** 2
+					num2 += (Rating[i] - AveRating) ** 2
+
+			CF = math.sqrt(num1 / cnt_OldCoders + num2 / (cnt_OldCoders - 1))
+
+			ERanks = []
+			for i in range(n):
+				if Rating[i] != -1:
+					exp = 0.5
+					for j in range(n):
+						if i == j:
+							continue
+						if Rating[j] != -1:
+							num = Rating[j] - Rating[i]
+							den = 2 * ((volatility[j] ** 2) + (volatility[i] ** 2))
+							den = math.sqrt(den)
+							exp += 0.5 * (math.erf(num / den) + 1)
+					ERanks.append(exp)
+				else:
+					ERanks.append(-1)
+
+			EPerf = []
+			APerf = []
+
+			OldCoderRank = 0
+			for i in range(n):
+				if ERanks[i] != -1:
+					OldCoderRank += 1
+					if (ERanks[i] <= 5) or (OldCoderRank <= 5):
+						num1 = sys.float_info.epsilon 
+						num2 = sys.float_info.epsilon 
+					else:
+						num1 = ERanks[i] - 5
+						num2 = OldCoderRank - 5
+				
+					EPerf.append(-1 * NormalDist().inv_cdf(num1 / cnt_OldCoders))
+					APerf.append(-1 * NormalDist().inv_cdf(num2 / cnt_OldCoders))
+				else:
+					EPerf.append(0)
+					APerf.append(0)
+			
+
+			for i in range(n):
+				if ERanks[i] != -1:
+					PerfAs[i] = Rating[i] + CF * (APerf[i] - EPerf[i])
+
+
+		ProblemRatings = [0] * divproblemcnt
+		
+
+		for i in range(n):
+			st = SolvedStatus[i]
+			for j in range(len(st)):
+				if st[j]:
+					ProblemRatings[j] += PerfAs[i]
+					Solvedby[j] += 1
+
+
+		for i in range(divproblemcnt):
+			if Solvedby[i] == 0:
+				ProblemRatings[i] = 'INF'
+			else:
+				ProblemRatings[i] = math.ceil(ProblemRatings[i] / Solvedby[i])
+
+
+		print('Solvedby(Rated Partcipants):' + " "*12, end = ' ')
+		print(Solvedby)
+				
+		print('TriedBy(Rated Partcipants):' +  " "*13, end = ' ')
+		print(Outoff)
+				
+		print('Expected Problem Ratings:' + " "*15, end = ' ')
+		print(ProblemRatings)
+	else:
+		print('The contest in unrated or invalid! No stats available !!')
+
 	for i in range(125):
 		print('~',end='')
 	print()

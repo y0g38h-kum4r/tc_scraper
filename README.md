@@ -1,6 +1,7 @@
 Python script to analyse Competitive Programming matches from site https://www.topcoder.com/ using BeautifulSoup4. Features available: Problem Ratings (feature not availabe in topcoder), Links to problems, Problemwise analysis!!
 
 ## How to install
+## beta version(Problem ratings are calculated as avg of PerfAs Ratings of coders, high execution time)
 ### Open a new terminal
 1. Create a new enlistment for the project:
 ```console
@@ -31,12 +32,14 @@ foo@bar:~$ tc_scraper -h
 foo@bar:~$usage: tc_scraper [-h] [-o] [-l] contest_name
 
 positional arguments:
-  contest_name        Contest name to analyse
+  contest_name        contest name to be analysed
+  div                 division to be analysed
 
 optional arguments:
   -h, --help          show this help message and exit
-  -o, --output        Output result to txt file
-  -l, --problemlinks  Prints the links to problems
+  -o, --output        output result to txt file
+  -l, --problemlinks  prints the links to problems
 ```
 
-https://pypi.org/project/tc-scraper/
+## stable version(Problem Ratings are calculated as average of Final Ratings of coders, minimal execution time)
+https://pypi.org/project/tc-scraper/ 
